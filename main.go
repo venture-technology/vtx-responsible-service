@@ -6,9 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 	"github.com/venture-technology/vtx-responsible-service/config"
@@ -30,14 +27,6 @@ func main() {
 	err = migrate(db, config.Database.Schema)
 	if err != nil {
 		log.Fatalf("failed to execute migrations: %v", err)
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(config.Cloud.Region),
-		Credentials: credentials.NewStaticCredentials(config.Cloud.AccessKey, config.Cloud.SecretKey, config.Cloud.Token),
-	})
-	if err != nil {
-		log.Fatalf("failed to create session at aws: %v", err)
 	}
 
 	router := gin.Default()
