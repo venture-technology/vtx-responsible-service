@@ -19,11 +19,11 @@ func (ct *ChildController) RegisterRoutes(router *gin.Engine) {
 
 	api := router.Group("vtx-responsible/api/v1")
 
-	api.POST("/:cpf/child")
-	api.GET("/:cpf/child/:rg")
-	api.GET("/:cpf/child")
-	api.PATCH("/:cpf/child/:rg")
-	api.DELETE("/:cpf/child/:rg")
+	api.POST("/:cpf/child", ct.CreateChild)
+	api.GET("/:cpf/child/:rg", ct.GetChild)
+	api.GET("/:cpf/child", ct.FindAllChildren)
+	api.PATCH("/:cpf/child/:rg", ct.UpdaeteChild)
+	api.DELETE("/:cpf/child/:rg", ct.DeleteChild)
 
 }
 
