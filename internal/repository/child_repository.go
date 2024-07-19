@@ -27,14 +27,14 @@ func NewChildRepository(conn *sql.DB) *ChildRepository {
 
 func (cr *ChildRepository) CreateChild(ctx context.Context, child *models.Child) error {
 	sqlQuery := `INSERT INTO children (name, rg, responsible_id) VALUES ($1, $2, $3)`
-	_, err := cr.db.Exec(sqlQuery, child.Name, child.RG, child.Responsible.ID)
+	_, err := cr.db.Exec(sqlQuery, child.Name, child.RG, child.Responsible.CPF)
 	return err
 }
 
 func (cr *ChildRepository) GetChild(ctx context.Context, rg *string) (*models.Child, error) {
 	sqlQuery := `SELECT id, name, rg, responsible_id FROM children WHERE rg = $1 LIMIT 1`
 	var child models.Child
-	err := cr.db.QueryRow(sqlQuery, *rg).Scan(&child.ID, &child.Name, &child.RG, &child.Responsible.ID)
+	err := cr.db.QueryRow(sqlQuery, *rg).Scan(&child.ID, &child.Name, &child.RG, &child.Responsible.CPF)
 	if err != nil || err == sql.ErrNoRows {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (cr *ChildRepository) FindAllChildren(ctx context.Context, cpf *string) ([]
 			&child.ID,
 			&child.Name,
 			&child.RG,
-			&child.Responsible.ID,
+			&child.Responsible.CPF,
 		)
 		if err != nil {
 			return nil, err
