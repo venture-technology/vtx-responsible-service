@@ -1,5 +1,4 @@
 -- Table Responsible
-
 CREATE TABLE IF NOT EXISTS responsible (
     id SERIAL,
     name VARCHAR(100) NOT NULL,
@@ -10,4 +9,13 @@ CREATE TABLE IF NOT EXISTS responsible (
     number VARCHAR(10) NOT NULL,
     complement VARCHAR(10),
     zip VARCHAR(8) NOT NULL
+);
+
+-- Table Children
+CREATE TABLE IF NOT EXISTS children (
+    id SERIAL,
+    name VARCHAR(100) NOT NULL,
+    rg VARCHAR(9) PRIMARY KEY NOT NULL,
+    responsible_id INT NOT NULL,
+    FOREIGN KEY (responsible_id) REFERENCES responsible(id) ON DELETE CASCADE
 );
