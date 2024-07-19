@@ -29,8 +29,8 @@ func (cs *ChildService) FindAllChilds(ctx context.Context, cpf *string) ([]model
 	return cs.childrepository.FindAllChildren(ctx, cpf)
 }
 
-func (cs *ChildService) UpdateChild(ctx context.Context, rg *string) error {
-	return cs.childrepository.DeleteChild(ctx, rg)
+func (cs *ChildService) UpdateChild(ctx context.Context, child *models.Child) error {
+	return cs.childrepository.UpdateChild(ctx, child)
 }
 
 func (cs *ChildService) DeleteChild(ctx context.Context, rg *string) error {
