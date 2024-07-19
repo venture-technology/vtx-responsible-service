@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 	"github.com/venture-technology/vtx-responsible-service/config"
+	"github.com/venture-technology/vtx-responsible-service/internal/controller"
+	"github.com/venture-technology/vtx-responsible-service/internal/repository"
 	"github.com/venture-technology/vtx-responsible-service/internal/service"
 )
 
@@ -38,7 +40,12 @@ func main() {
 	driverService := service.NewDriverService(driverRepository, kafkaRepository)
 	driverController := controller.NewDriverController(driverService)
 
+	childRepository := repository.NewChildRepository(db)
+	childService := service.NewChildService(childRepository)
+	childController := controller.NewChildController(childService)
+
 	driverController.RegisterRoutes(router)
+	childController.RegisterRoutes(router)
 
 	fmt.Println(driverController)
 	router.Run(fmt.Sprintf(":%d", config.Server.Port))
