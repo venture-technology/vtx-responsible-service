@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS children (
     id SERIAL,
     name VARCHAR(100) NOT NULL,
     rg VARCHAR(9) PRIMARY KEY NOT NULL,
-    responsible_id INT NOT NULL,
-    FOREIGN KEY (responsible_id) REFERENCES responsible(id) ON DELETE CASCADE
+    responsible_id VARCHAR(14) NOT NULL,
+    FOREIGN KEY (responsible_id) REFERENCES responsible(cpf) ON DELETE CASCADE
 );
