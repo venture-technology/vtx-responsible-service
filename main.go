@@ -12,6 +12,8 @@ import (
 	"github.com/venture-technology/vtx-responsible-service/internal/controller"
 	"github.com/venture-technology/vtx-responsible-service/internal/repository"
 	"github.com/venture-technology/vtx-responsible-service/internal/service"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -36,10 +38,11 @@ func main() {
 
 	kafkaRepository := repository.NewKafkaRepository(producer)
 
-	driverRepository := repository.NewDriverRepository(db)
-	driverService := service.NewDriverService(driverRepository, kafkaRepository)
-	driverController := controller.NewDriverController(driverService)
+	responsibleRepository := repository.NewResponsibleRepository(db)
+	responsibleService := service.NewResponsibleService(responsibleRepository, kafkaRepository)
+	responsibleController := controller.NewResponsibleController(responsibleService)
 
+	responsibleController.RegisterRoutes(router)
 	childRepository := repository.NewChildRepository(db)
 	childService := service.NewChildService(childRepository)
 	childController := controller.NewChildController(childService)
@@ -47,7 +50,7 @@ func main() {
 	driverController.RegisterRoutes(router)
 	childController.RegisterRoutes(router)
 
-	fmt.Println(driverController)
+	fmt.Println(responsibleController)
 	router.Run(fmt.Sprintf(":%d", config.Server.Port))
 }
 
