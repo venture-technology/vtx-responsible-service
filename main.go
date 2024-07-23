@@ -47,7 +47,6 @@ func main() {
 	childService := service.NewChildService(childRepository)
 	childController := controller.NewChildController(childService)
 
-	driverController.RegisterRoutes(router)
 	childController.RegisterRoutes(router)
 
 	fmt.Println(responsibleController)
