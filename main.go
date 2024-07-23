@@ -43,6 +43,12 @@ func main() {
 	responsibleController := controller.NewResponsibleController(responsibleService)
 
 	responsibleController.RegisterRoutes(router)
+	childRepository := repository.NewChildRepository(db)
+	childService := service.NewChildService(childRepository)
+	childController := controller.NewChildController(childService)
+
+	driverController.RegisterRoutes(router)
+	childController.RegisterRoutes(router)
 
 	fmt.Println(responsibleController)
 	router.Run(fmt.Sprintf(":%d", config.Server.Port))
