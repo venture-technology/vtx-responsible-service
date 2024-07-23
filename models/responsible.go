@@ -10,4 +10,5 @@ type Responsible struct {
 	Number     string `json:"number"`
 	ZIP        string `json:"zip"`
 	Complement string `json:"complement"`
+	Status     string `json:"status" validate:"oneof=OK ACTIVE BLOCKED BANNED"`
 }

@@ -1,0 +1,174 @@
+package controller
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/venture-technology/vtx-responsible-service/internal/exceptions"
+	"github.com/venture-technology/vtx-responsible-service/internal/middleware"
+	"github.com/venture-technology/vtx-responsible-service/internal/service"
+	"github.com/venture-technology/vtx-responsible-service/models"
+	"github.com/venture-technology/vtx-responsible-service/utils"
+)
+
+type ResponsibleController struct {
+	responsibleservice *service.ResponsibleService
+}
+
+func NewResponsibleController(responsibleservice *service.ResponsibleService) *ResponsibleController {
+	return &ResponsibleController{
+		responsibleservice: responsibleservice,
+	}
+}
+
+func (ct *ResponsibleController) RegisterRoutes(router *gin.Engine) {
+	api := router.Group("vtx-responsible/api/v1")
+
+	api.GET("/ping", ct.Ping)
+	api.POST("/responsible", ct.CreateResponsible)
+	api.GET("/responsible/:cpf", ct.GetResponsible)
+	api.PATCH("/responsible", middleware.ResponsibleMiddleware(), ct.UpdateResponsible)
+	api.DELETE("/responsible", middleware.ResponsibleMiddleware(), ct.DeleteResponsible)
+	api.POST("/login/responsible", ct.AuthResponsible)
+}
+
+func (ct *ResponsibleController) Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"ping": "pong",
+	})
+}
+
+func (ct *ResponsibleController) CreateResponsible(c *gin.Context) {
+	var input models.Responsible
+
+	if err := c.BindJSON(&input); err != nil {
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
+		return
+	}
+
+	err := ct.responsibleservice.CreateResponsible(c, &input)
+	if err != nil {
+		log.Printf("error to create responsible: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured qwhen creating responsible"))
+		return
+	}
+
+	log.Print("responsible create was successful")
+
+	c.JSON(http.StatusCreated, input)
+}
+
+func (ct *ResponsibleController) GetResponsible(c *gin.Context) {
+	cpf := c.Param("cpf")
+
+	responsible, err := ct.responsibleservice.GetResponsible(c, &cpf)
+	if err != nil {
+		log.Printf("error while found responsible: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "responsible not found"))
+		return
+	}
+
+	c.JSON(http.StatusOK, responsible)
+}
+
+func (ct *ResponsibleController) UpdateResponsible(c *gin.Context) {
+	cpfInteface, err := ct.responsibleservice.ParserJwtResponsible(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "cpf of cookie don't found"})
+		return
+	}
+
+	cpf, err := utils.InterfaceToString(cpfInteface)
+
+	log.Printf("trying change your infos --> %v", cpf)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "the value isn't string"})
+		return
+	}
+
+	var input models.Responsible
+
+	if err := c.BindJSON(&input); err != nil {
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
+		return
+	}
+
+	input.CPF = *cpf
+
+	err = ct.responsibleservice.UpdateResponsible(c, &input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at update"))
+		return
+	}
+
+	log.Print("infos updated")
+
+	c.JSON(http.StatusOK, gin.H{"message": "updated w successfully"})
+}
+
+func (ct *ResponsibleController) DeleteResponsible(c *gin.Context) {
+	cpfInteface, err := ct.responsibleservice.ParserJwtResponsible(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "cpf of cookie don't found"})
+		return
+	}
+
+	cpf, err := utils.InterfaceToString(cpfInteface)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "the value isn't string"})
+		return
+	}
+
+	err = ct.responsibleservice.DeleteResponsible(c, cpf)
+	if err != nil {
+		log.Printf("error whiling deleted school: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "error to deleted school"})
+		return
+	}
+
+	c.SetCookie("token", "", -1, "/", c.Request.Host, false, true)
+
+	log.Printf("deleted your account --> %v", cpf)
+
+	c.JSON(http.StatusOK, gin.H{"message": "responsible deleted w successfully"})
+}
+
+func (ct *ResponsibleController) AuthResponsible(c *gin.Context) {
+	var input models.Responsible
+
+	log.Printf("doing login --> %s", input.Email)
+
+	if err := c.BindJSON(&input); err != nil {
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
+		return
+	}
+
+	responsible, err := ct.responsibleservice.AuthResponsible(c, &input)
+	if err != nil {
+		log.Printf("wrong email or password: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "wrong email or password"})
+		return
+	}
+
+	jwt, err := ct.responsibleservice.CreateTokenJWTResponsible(c, responsible)
+
+	log.Printf("token returned --> %v", jwt)
+
+	if err != nil {
+		log.Printf("error to create jwt token: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "error to create jwt token"})
+		return
+	}
+
+	c.SetCookie("token", jwt, 3600, "/", c.Request.Host, false, true)
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"responsible": responsible,
+		"token":       jwt,
+	})
+}
