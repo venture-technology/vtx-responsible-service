@@ -6,13 +6,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 	"github.com/venture-technology/vtx-responsible-service/config"
+	"github.com/venture-technology/vtx-responsible-service/internal/controller"
+	"github.com/venture-technology/vtx-responsible-service/internal/repository"
 	"github.com/venture-technology/vtx-responsible-service/internal/service"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -32,26 +33,18 @@ func main() {
 		log.Fatalf("failed to execute migrations: %v", err)
 	}
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(config.Cloud.Region),
-		Credentials: credentials.NewStaticCredentials(config.Cloud.AccessKey, config.Cloud.SecretKey, config.Cloud.Token),
-	})
-	if err != nil {
-		log.Fatalf("failed to create session at aws: %v", err)
-	}
-
 	router := gin.Default()
 	producer := kafka.NewWriter(kafka.WriterConfig{Brokers: []string{config.Messaging.Brokers}, Topic: config.Messaging.Topic, Balancer: &kafka.LeastBytes{}})
 
 	kafkaRepository := repository.NewKafkaRepository(producer)
 
-	driverRepository := repository.NewDriverRepository(db)
-	driverService := service.NewDriverService(driverRepository, kafkaRepository)
-	driverController := controller.NewDriverController(driverService)
+	responsibleRepository := repository.NewResponsibleRepository(db)
+	responsibleService := service.NewResponsibleService(responsibleRepository, kafkaRepository)
+	responsibleController := controller.NewResponsibleController(responsibleService)
 
-	driverController.RegisterRoutes(router)
+	responsibleController.RegisterRoutes(router)
 
-	fmt.Println(driverController)
+	fmt.Println(responsibleController)
 	router.Run(fmt.Sprintf(":%d", config.Server.Port))
 }
 
