@@ -13,6 +13,7 @@ type Config struct {
 	Cloud     Cloud
 	Cache     Cache
 	Messaging Messaging
+	StripeEnv StripeEnv
 }
 
 type Server struct {
@@ -48,6 +49,11 @@ type Messaging struct {
 	Brokers   string `yaml:"broker"`
 	Topic     string `yaml:"topic"`
 	Partition int    `yaml:"partition"`
+}
+
+type StripeEnv struct {
+	PublicKey string `yaml:"stripe_publickey"`
+	SecretKey string `yaml:"stripe_secretkey"`
 }
 
 var config *Config

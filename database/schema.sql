@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS responsible (
     number TEXT NOT NULL,
     complement TEXT,
     zip VARCHAR(8) NOT NULL,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    card_token TEXT,
+    payment_method_id TEXT,
+    customer_id TEXT
 );
 
 -- Table Children
