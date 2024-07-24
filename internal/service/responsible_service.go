@@ -8,6 +8,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/stripe/stripe-go/v79"
+	"github.com/stripe/stripe-go/v79/customer"
 	"github.com/venture-technology/vtx-responsible-service/config"
 	"github.com/venture-technology/vtx-responsible-service/internal/repository"
 	"github.com/venture-technology/vtx-responsible-service/models"
@@ -81,5 +83,30 @@ func (d *ResponsibleService) CreateTokenJWTResponsible(ctx context.Context, resp
 	}
 
 	return jwt, nil
+
+}
+
+func (d *ResponsibleService) CreateCustomer(ctx context.Context, responsible *models.Responsible) (*stripe.Customer, error) {
+
+	conf := config.Get()
+
+	stripe.Key = conf.StripeEnv.SecretKey
+
+	params := &stripe.CustomerParams{
+		Name:          stripe.String(responsible.Name),
+		Email:         stripe.String(responsible.Email),
+		PaymentMethod: stripe.String(responsible.PaymentMethod),
+		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
+			DefaultPaymentMethod: stripe.String(responsible.PaymentMethod),
+		},
+	}
+
+	resp, err := customer.New(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 
 }
