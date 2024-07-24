@@ -28,34 +28,34 @@ func NewResponsibleService(responsiblerepository repository.IResponsibleReposito
 	}
 }
 
-func (d *ResponsibleService) CreateResponsible(ctx context.Context, responsible *models.Responsible) error {
+func (rs *ResponsibleService) CreateResponsible(ctx context.Context, responsible *models.Responsible) error {
 
 	responsible.Password = utils.HashPassword(responsible.Password)
 
-	return d.responsiblerepository.CreateResponsible(ctx, responsible)
+	return rs.responsiblerepository.CreateResponsible(ctx, responsible)
 }
 
-func (d *ResponsibleService) GetResponsible(ctx context.Context, cpf *string) (*models.Responsible, error) {
+func (rs *ResponsibleService) GetResponsible(ctx context.Context, cpf *string) (*models.Responsible, error) {
 	log.Printf("param read school -> cpf: %s", *cpf)
-	return d.responsiblerepository.GetResponsible(ctx, cpf)
+	return rs.responsiblerepository.GetResponsible(ctx, cpf)
 }
 
-func (d *ResponsibleService) UpdateResponsible(ctx context.Context, responsible *models.Responsible) error {
+func (rs *ResponsibleService) UpdateResponsible(ctx context.Context, responsible *models.Responsible) error {
 	log.Printf("input received to update school -> name: %s, cpf: %s, email: %s", responsible.Name, responsible.CPF, responsible.Email)
-	return d.responsiblerepository.UpdateResponsible(ctx, responsible)
+	return rs.responsiblerepository.UpdateResponsible(ctx, responsible)
 }
 
-func (d *ResponsibleService) DeleteResponsible(ctx context.Context, cpf *string) error {
+func (rs *ResponsibleService) DeleteResponsible(ctx context.Context, cpf *string) error {
 	log.Printf("trying delete your infos --> %v", *cpf)
-	return d.responsiblerepository.DeleteResponsible(ctx, cpf)
+	return rs.responsiblerepository.DeleteResponsible(ctx, cpf)
 }
 
-func (d *ResponsibleService) AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error) {
+func (rs *ResponsibleService) AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error) {
 	responsible.Password = utils.HashPassword((responsible.Password))
-	return d.responsiblerepository.AuthResponsible(ctx, responsible)
+	return rs.responsiblerepository.AuthResponsible(ctx, responsible)
 }
 
-func (d *ResponsibleService) ParserJwtResponsible(ctx *gin.Context) (interface{}, error) {
+func (rs *ResponsibleService) ParserJwtResponsible(ctx *gin.Context) (interface{}, error) {
 
 	cpf, found := ctx.Get("cpf")
 
@@ -67,7 +67,7 @@ func (d *ResponsibleService) ParserJwtResponsible(ctx *gin.Context) (interface{}
 
 }
 
-func (d *ResponsibleService) CreateTokenJWTResponsible(ctx context.Context, responsible *models.Responsible) (string, error) {
+func (rs *ResponsibleService) CreateTokenJWTResponsible(ctx context.Context, responsible *models.Responsible) (string, error) {
 
 	conf := config.Get()
 
@@ -86,7 +86,7 @@ func (d *ResponsibleService) CreateTokenJWTResponsible(ctx context.Context, resp
 
 }
 
-func (d *ResponsibleService) CreateCustomer(ctx context.Context, responsible *models.Responsible) (*stripe.Customer, error) {
+func (rs *ResponsibleService) CreateCustomer(ctx context.Context, responsible *models.Responsible) (*stripe.Customer, error) {
 
 	conf := config.Get()
 
