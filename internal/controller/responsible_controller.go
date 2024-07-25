@@ -31,8 +31,7 @@ func (ct *ResponsibleController) RegisterRoutes(router *gin.Engine) {
 	api.PATCH("/responsible", middleware.ResponsibleMiddleware(), ct.UpdateResponsible)
 	api.DELETE("/responsible", middleware.ResponsibleMiddleware(), ct.DeleteResponsible)
 	api.POST("/login/responsible", ct.AuthResponsible)
-	api.POST("/responsible/card", ct.RegisterCreditCard)
-
+	api.POST("responsible/card", ct.RegisterCreditCard)
 }
 
 func (ct *ResponsibleController) Ping(c *gin.Context) {
@@ -111,7 +110,6 @@ func (ct *ResponsibleController) UpdateResponsible(c *gin.Context) {
 	input.CPF = *cpf
 
 	currentResponsible, err := ct.responsibleservice.GetResponsible(c, &input.CPF)
-
 	if err != nil {
 		log.Printf("error to parsed body: %s", err.Error())
 		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at get current user"))
@@ -232,7 +230,6 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 	}
 
 	err = ct.responsibleservice.RegisterCreditCard(c, &input.CPF, &input.CardToken, &paymentMethod.ID)
-
 	if err != nil {
 		log.Printf("error to register card: %s", err.Error())
 		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when register credit card"))
@@ -240,5 +237,4 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"messsage": "card attached in customer"})
-
 }
