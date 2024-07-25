@@ -111,18 +111,22 @@ func (rs *ResponsibleService) CreateCustomer(ctx context.Context, responsible *m
 
 }
 
-func (rs *ResponsibleService) UpdateCustomer(ctx context.Context, customerId, email, phone string) (*stripe.Customer, error) {
+func (rs *ResponsibleService) UpdateCustomer(ctx context.Context, responsible *models.Responsible) (*stripe.Customer, error) {
 
 	conf := config.Get()
 
 	stripe.Key = conf.StripeEnv.SecretKey
 
 	params := &stripe.CustomerParams{
-		Email: &email,
-		Phone: &phone,
+		Email:         &responsible.Email,
+		Phone:         &responsible.Phone,
+		PaymentMethod: &responsible.PaymentMethod,
+		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
+			DefaultPaymentMethod: &responsible.PaymentMethod,
+		},
 	}
 
-	updatedCustomer, err := customer.Update(customerId, params)
+	updatedCustomer, err := customer.Update(responsible.CustomerId, params)
 
 	if err != nil {
 		return nil, err

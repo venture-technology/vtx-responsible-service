@@ -116,7 +116,7 @@ func (ct *ResponsibleController) UpdateResponsible(c *gin.Context) {
 		return
 	}
 
-	_, err = ct.responsibleservice.UpdateCustomer(c, currentResponsible.CustomerId, currentResponsible.Email, currentResponsible.Phone)
+	_, err = ct.responsibleservice.UpdateCustomer(c, currentResponsible)
 	if err != nil {
 		log.Printf("customer update stripe error: %s", err.Error())
 		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "customer update stripe error"))

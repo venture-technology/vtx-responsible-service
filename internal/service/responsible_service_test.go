@@ -110,7 +110,7 @@ func TestUpdateCustomer(t *testing.T) {
 	responsibleMock.Email = "johndoetesteupdate@example.com"
 	responsibleMock.Phone = "+55 11 91234 5678"
 
-	_, err := responsibleService.UpdateCustomer(context.Background(), responsibleMock.CustomerId, responsibleMock.Email, responsibleMock.Phone)
+	_, err := responsibleService.UpdateCustomer(context.Background(), responsibleMock)
 
 	if err != nil {
 		t.Errorf(err.Error())
