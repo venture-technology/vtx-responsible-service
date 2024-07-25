@@ -13,7 +13,7 @@ type Config struct {
 	Cloud     Cloud
 	Cache     Cache
 	Messaging Messaging
-	StripeEnv StripeEnv
+	StripeEnv StripeEnv `yaml:"stripe-env"`
 }
 
 type Server struct {
