@@ -213,7 +213,10 @@ func (ct *ResponsibleController) AuthResponsible(c *gin.Context) {
 }
 
 func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
-	// receiving cardtokem and cpf only
+
+	cpf := c.Param("cpf")
+
+	// receiving cardtokem only
 	var input models.Responsible
 
 	if err := c.BindJSON(&input); err != nil {
@@ -221,6 +224,8 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
 		return
 	}
+
+	input.CPF = cpf
 
 	paymentMethod, err := ct.responsibleservice.CreatePaymentMethod(c, &input.CardToken)
 	if err != nil {
