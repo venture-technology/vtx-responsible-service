@@ -151,7 +151,7 @@ func (rs *ResponsibleService) DeleteCustomer(ctx context.Context, customerId str
 
 }
 
-func (rs *ResponsibleService) CreatePaymentMethod(ctx context.Context, customerId, cardToken *string) (*stripe.PaymentMethod, error) {
+func (rs *ResponsibleService) CreatePaymentMethod(ctx context.Context, cardToken *string) (*stripe.PaymentMethod, error) {
 
 	conf := config.Get()
 
@@ -172,4 +172,8 @@ func (rs *ResponsibleService) CreatePaymentMethod(ctx context.Context, customerI
 
 	return pm, nil
 
+}
+
+func (rs *ResponsibleService) RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
+	return rs.responsiblerepository.RegisterCreditCard(ctx, cpf, cardToken, paymentMethodId)
 }

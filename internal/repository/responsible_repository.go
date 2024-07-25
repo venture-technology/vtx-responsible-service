@@ -15,6 +15,7 @@ type IResponsibleRepository interface {
 	UpdateResponsible(ctx context.Context, currentResponsible, responsible *models.Responsible) error
 	DeleteResponsible(ctx context.Context, cpf *string) error
 	AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error)
+	RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error
 }
 
 type ResponsibleRepository struct {
@@ -134,4 +135,12 @@ func (rer *ResponsibleRepository) AuthResponsible(ctx context.Context, responsib
 	}
 	responsibleData.Password = ""
 	return &responsibleData, nil
+}
+
+func (rer *ResponsibleRepository) RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
+
+	sqlQueryUpdate := `UPDATE responsible SET card_token = $1, payment_method_id = $2 WHERE cpf = $3`
+	_, err := rer.db.ExecContext(ctx, sqlQueryUpdate, cardToken, paymentMethodId, cpf)
+	return err
+
 }
