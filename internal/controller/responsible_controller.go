@@ -48,10 +48,19 @@ func (ct *ResponsibleController) CreateResponsible(c *gin.Context) {
 		return
 	}
 
-	err := ct.responsibleservice.CreateResponsible(c, &input)
+	cust, err := ct.responsibleservice.CreateCustomer(c, &input)
+	if err != nil {
+		log.Printf("error to create customer at stripe: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when creating customer at stripe"))
+		return
+	}
+
+	input.CustomerId = cust.ID
+
+	err = ct.responsibleservice.CreateResponsible(c, &input)
 	if err != nil {
 		log.Printf("error to create responsible: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured qwhen creating responsible"))
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when creating responsible"))
 		return
 	}
 
@@ -99,9 +108,25 @@ func (ct *ResponsibleController) UpdateResponsible(c *gin.Context) {
 
 	input.CPF = *cpf
 
-	err = ct.responsibleservice.UpdateResponsible(c, &input)
+	currentResponsible, err := ct.responsibleservice.GetResponsible(c, &input.CPF)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at update"))
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at get current user"))
+		return
+	}
+
+	_, err = ct.responsibleservice.UpdateCustomer(c, currentResponsible.CustomerId, currentResponsible.Email, currentResponsible.Phone)
+	if err != nil {
+		log.Printf("customer update stripe error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "customer update stripe error"))
+		return
+	}
+
+	err = ct.responsibleservice.UpdateResponsible(c, currentResponsible, &input)
+	if err != nil {
+		log.Printf("responsible update error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "responsible update error"))
 		return
 	}
 
