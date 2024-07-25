@@ -120,4 +120,17 @@ func TestUpdateCustomer(t *testing.T) {
 
 func TestDeleteCustomer(t *testing.T) {
 
+	db, responsibleService := setupTesteDb(t)
+	defer db.Close()
+
+	responsibleMock := mockResponsible()
+
+	responsibleMock.CustomerId = "cus_QXDV6WVFkYAe4a"
+
+	_, err := responsibleService.DeleteCustomer(context.Background(), responsibleMock.CustomerId)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 }

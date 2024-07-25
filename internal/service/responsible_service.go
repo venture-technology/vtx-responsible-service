@@ -132,6 +132,21 @@ func (rs *ResponsibleService) UpdateCustomer(ctx context.Context, customerId, em
 
 }
 
+func (rs *ResponsibleService) DeleteCustomer(ctx context.Context, customerId string) (*stripe.Customer, error) {
+
+	conf := config.Get()
+
+	stripe.Key = conf.StripeEnv.SecretKey
+
+	c, err := customer.Del(customerId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+
+}
+
 func (rs *ResponsibleService) CreatePaymentMethod(ctx context.Context, customerId, cardToken *string) (*stripe.PaymentMethod, error) {
 
 	conf := config.Get()

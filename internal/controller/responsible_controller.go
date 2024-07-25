@@ -148,6 +148,20 @@ func (ct *ResponsibleController) DeleteResponsible(c *gin.Context) {
 		return
 	}
 
+	responsible, err := ct.responsibleservice.GetResponsible(c, cpf)
+	if err != nil {
+		log.Printf("get customerid error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "get customerid error"))
+		return
+	}
+
+	_, err = ct.responsibleservice.DeleteCustomer(c, responsible.CustomerId)
+	if err != nil {
+		log.Printf("delete customerid error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "delete customerid error"))
+		return
+	}
+
 	err = ct.responsibleservice.DeleteResponsible(c, cpf)
 	if err != nil {
 		log.Printf("error whiling deleted school: %s", err.Error())
