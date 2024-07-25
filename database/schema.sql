@@ -1,4 +1,3 @@
-DROP TABLE responsible;
 -- Table Responsible
 CREATE TABLE IF NOT EXISTS responsible (
     id SERIAL,

@@ -31,7 +31,7 @@ func (ct *ResponsibleController) RegisterRoutes(router *gin.Engine) {
 	api.PATCH("/responsible", middleware.ResponsibleMiddleware(), ct.UpdateResponsible)
 	api.DELETE("/responsible", middleware.ResponsibleMiddleware(), ct.DeleteResponsible)
 	api.POST("/login/responsible", ct.AuthResponsible)
-	api.POST("responsible/card", ct.RegisterCreditCard)
+	api.POST("responsible/:cpf/card", ct.RegisterCreditCard)
 }
 
 func (ct *ResponsibleController) Ping(c *gin.Context) {
@@ -216,8 +216,7 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 
 	cpf := c.Param("cpf")
 
-	// receiving cardtokem only
-	var input models.Responsible
+	var input models.CreditCard
 
 	if err := c.BindJSON(&input); err != nil {
 		log.Printf("error to parsed body: %s", err.Error())
@@ -227,6 +226,8 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 
 	input.CPF = cpf
 
+	log.Print(input)
+
 	paymentMethod, err := ct.responsibleservice.CreatePaymentMethod(c, &input.CardToken)
 	if err != nil {
 		log.Printf("error to create payment method: %s", err.Error())
@@ -234,12 +235,37 @@ func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
 		return
 	}
 
-	err = ct.responsibleservice.RegisterCreditCard(c, &input.CPF, &input.CardToken, &paymentMethod.ID)
+	responsible, err := ct.responsibleservice.GetResponsible(c, &cpf)
 	if err != nil {
-		log.Printf("error to register card: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when register credit card"))
+		log.Printf("error to get customer id: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when getting customer id"))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"messsage": "card attached in customer"})
+	_, err = ct.responsibleservice.AttachPaymentMethod(c, &responsible.CustomerId, &paymentMethod.ID)
+	if err != nil {
+		log.Printf("attach card in customer error: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when attaching card in customer"))
+		return
+	}
+
+	if input.Default {
+
+		_, err := ct.responsibleservice.UpdatePaymentMethodDefault(c, &responsible.CustomerId, &paymentMethod.ID)
+		if err != nil {
+			log.Printf("change default card for customer error: %s", err.Error())
+			c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when changing default card for customer"))
+			return
+		}
+
+		err = ct.responsibleservice.SaveCreditCard(c, &input.CPF, &input.CardToken, &paymentMethod.ID)
+		if err != nil {
+			log.Printf("error to register card: %s", err.Error())
+			c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when register credit card"))
+			return
+		}
+
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "card attached in customer"})
 }

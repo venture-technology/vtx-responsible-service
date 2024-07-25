@@ -24,16 +24,18 @@ func newPostgres(dbConfig config.Database) string {
 
 func mockResponsible() *models.Responsible {
 	return &models.Responsible{
-		Name:          "John Doe",
-		Email:         "johndoe@example.com",
-		Password:      "123teste",
-		CPF:           "79887042064",
-		Street:        "Rua Itamerendiba",
-		Number:        "26",
-		ZIP:           "12345678",
-		Complement:    "Apto 32",
-		Status:        "ACTIVE",
-		CardToken:     "tok_visa",
+		Name:       "John Doe",
+		Email:      "johndoe@example.com",
+		Password:   "123teste",
+		CPF:        "79887042064",
+		Street:     "Rua Itamerendiba",
+		Number:     "26",
+		ZIP:        "12345678",
+		Complement: "Apto 32",
+		Status:     "ACTIVE",
+		CreditCard: models.CreditCard{
+			CardToken: "tok_visa",
+		},
 		PaymentMethod: "",
 		CustomerId:    "",
 	}

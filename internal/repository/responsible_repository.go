@@ -15,7 +15,7 @@ type IResponsibleRepository interface {
 	UpdateResponsible(ctx context.Context, currentResponsible, responsible *models.Responsible) error
 	DeleteResponsible(ctx context.Context, cpf *string) error
 	AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error)
-	RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error
+	SaveCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error
 }
 
 type ResponsibleRepository struct {
@@ -35,7 +35,7 @@ func (rer *ResponsibleRepository) CreateResponsible(ctx context.Context, respons
 }
 
 func (rer *ResponsibleRepository) GetResponsible(ctx context.Context, cpf *string) (*models.Responsible, error) {
-	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement, card_token, payment_method_id, customer_id, phone FROM responsible WHERE cpf = $1 LIMIT 1`
+	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement, COALESCE(card_token, '') AS card_token, COALESCE(payment_method_id, '') AS payment_method_id, customer_id, phone FROM responsible WHERE cpf = $1 LIMIT 1`
 	var responsible models.Responsible
 	err := rer.db.QueryRow(sqlQuery, *cpf).Scan(
 		&responsible.ID,
@@ -47,7 +47,7 @@ func (rer *ResponsibleRepository) GetResponsible(ctx context.Context, cpf *strin
 		&responsible.ZIP,
 		&responsible.Status,
 		&responsible.Complement,
-		&responsible.CardToken,
+		&responsible.CreditCard.CardToken,
 		&responsible.PaymentMethod,
 		&responsible.CustomerId,
 		&responsible.Phone,
@@ -67,19 +67,24 @@ func (rer *ResponsibleRepository) UpdateResponsible(ctx context.Context, current
 	if responsible.Email != "" && responsible.Email != currentResponsible.Email {
 		currentResponsible.Email = responsible.Email
 	}
+
 	if responsible.Password != "" && responsible.Password != currentResponsible.Password {
 		currentResponsible.Password = responsible.Password
 		currentResponsible.Password = utils.HashPassword(currentResponsible.Password)
 	}
+
 	if responsible.Street != "" && responsible.Street != currentResponsible.Street {
 		currentResponsible.Street = responsible.Street
 	}
+
 	if responsible.Number != "" && responsible.Number != currentResponsible.Number {
 		currentResponsible.Number = responsible.Number
 	}
+
 	if responsible.ZIP != "" && responsible.ZIP != currentResponsible.ZIP {
 		currentResponsible.ZIP = responsible.ZIP
 	}
+
 	if responsible.Complement != "" && responsible.Complement != currentResponsible.Complement {
 		currentResponsible.Complement = responsible.Complement
 	}
@@ -121,7 +126,7 @@ func (rer *ResponsibleRepository) AuthResponsible(ctx context.Context, responsib
 		&responsible.ZIP,
 		&responsible.Status,
 		&responsible.Complement,
-		&responsible.CardToken,
+		&responsible.CreditCard.CardToken,
 		&responsible.PaymentMethod,
 		&responsible.CustomerId,
 		&responsible.Phone,
@@ -137,7 +142,7 @@ func (rer *ResponsibleRepository) AuthResponsible(ctx context.Context, responsib
 	return &responsibleData, nil
 }
 
-func (rer *ResponsibleRepository) RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
+func (rer *ResponsibleRepository) SaveCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
 
 	sqlQueryUpdate := `UPDATE responsible SET card_token = $1, payment_method_id = $2 WHERE cpf = $3`
 	_, err := rer.db.ExecContext(ctx, sqlQueryUpdate, cardToken, paymentMethodId, cpf)

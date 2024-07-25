@@ -118,12 +118,8 @@ func (rs *ResponsibleService) UpdateCustomer(ctx context.Context, responsible *m
 	stripe.Key = conf.StripeEnv.SecretKey
 
 	params := &stripe.CustomerParams{
-		Email:         &responsible.Email,
-		Phone:         &responsible.Phone,
-		PaymentMethod: &responsible.PaymentMethod,
-		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
-			DefaultPaymentMethod: &responsible.PaymentMethod,
-		},
+		Email: &responsible.Email,
+		Phone: &responsible.Phone,
 	}
 
 	updatedCustomer, err := customer.Update(responsible.CustomerId, params)
@@ -174,6 +170,46 @@ func (rs *ResponsibleService) CreatePaymentMethod(ctx context.Context, cardToken
 
 }
 
-func (rs *ResponsibleService) RegisterCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
-	return rs.responsiblerepository.RegisterCreditCard(ctx, cpf, cardToken, paymentMethodId)
+func (rs *ResponsibleService) AttachPaymentMethod(ctx context.Context, customerId, paymentMethodId *string) (*stripe.PaymentMethod, error) {
+
+	conf := config.Get()
+
+	stripe.Key = conf.StripeEnv.SecretKey
+
+	params := &stripe.PaymentMethodAttachParams{
+		Customer: customerId,
+	}
+	pm, err := paymentmethod.Attach(*paymentMethodId, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return pm, nil
+
+}
+
+func (rs *ResponsibleService) UpdatePaymentMethodDefault(ctx context.Context, customerId, paymentMethodId *string) (*stripe.Customer, error) {
+
+	conf := config.Get()
+
+	stripe.Key = conf.StripeEnv.SecretKey
+
+	params := &stripe.CustomerParams{
+		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
+			DefaultPaymentMethod: stripe.String(*paymentMethodId),
+		},
+	}
+
+	updatedCustomer, err := customer.Update(*customerId, params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedCustomer, nil
+
+}
+
+func (rs *ResponsibleService) SaveCreditCard(ctx context.Context, cpf, cardToken, paymentMethodId *string) error {
+	return rs.responsiblerepository.SaveCreditCard(ctx, cpf, cardToken, paymentMethodId)
 }
