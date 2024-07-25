@@ -179,13 +179,12 @@ func (ct *ResponsibleController) DeleteResponsible(c *gin.Context) {
 func (ct *ResponsibleController) AuthResponsible(c *gin.Context) {
 	var input models.Responsible
 
-	log.Printf("doing login --> %s", input.Email)
-
 	if err := c.BindJSON(&input); err != nil {
 		log.Printf("error to parsed body: %s", err.Error())
 		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
 		return
 	}
+	log.Printf("doing login --> %s", input.Email)
 
 	responsible, err := ct.responsibleservice.AuthResponsible(c, &input)
 	if err != nil {

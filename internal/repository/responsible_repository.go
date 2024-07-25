@@ -114,22 +114,23 @@ func (rer *ResponsibleRepository) DeleteResponsible(ctx context.Context, cpf *st
 }
 
 func (rer *ResponsibleRepository) AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error) {
-	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement, card_token, payment_method_id, customer_id, phone FROM responsible WHERE email = $1 LIMIT 1`
+	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement, card_token, payment_method_id, customer_id, phone, password FROM responsible WHERE email = $1 LIMIT 1`
 	var responsibleData models.Responsible
 	err := rer.db.QueryRow(sqlQuery, responsible.Email).Scan(
-		&responsible.ID,
-		&responsible.Name,
-		&responsible.CPF,
-		&responsible.Email,
-		&responsible.Street,
-		&responsible.Number,
-		&responsible.ZIP,
-		&responsible.Status,
-		&responsible.Complement,
-		&responsible.CreditCard.CardToken,
-		&responsible.PaymentMethod,
-		&responsible.CustomerId,
-		&responsible.Phone,
+		&responsibleData.ID,
+		&responsibleData.Name,
+		&responsibleData.CPF,
+		&responsibleData.Email,
+		&responsibleData.Street,
+		&responsibleData.Number,
+		&responsibleData.ZIP,
+		&responsibleData.Status,
+		&responsibleData.Complement,
+		&responsibleData.CreditCard.CardToken,
+		&responsibleData.PaymentMethod,
+		&responsibleData.CustomerId,
+		&responsibleData.Phone,
+		&responsibleData.Password,
 	)
 	if err != nil || err == sql.ErrNoRows {
 		return nil, err
