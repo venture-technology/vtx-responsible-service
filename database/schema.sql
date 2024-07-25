@@ -1,3 +1,4 @@
+DROP TABLE responsible;
 -- Table Responsible
 CREATE TABLE IF NOT EXISTS responsible (
     id SERIAL,
@@ -12,7 +13,8 @@ CREATE TABLE IF NOT EXISTS responsible (
     status TEXT NOT NULL,
     card_token TEXT,
     payment_method_id TEXT,
-    customer_id TEXT
+    customer_id TEXT NOT NULL,
+    phone TEXT NOT NULL
 );
 
 -- Table Children

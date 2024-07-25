@@ -31,6 +31,8 @@ func (ct *ResponsibleController) RegisterRoutes(router *gin.Engine) {
 	api.PATCH("/responsible", middleware.ResponsibleMiddleware(), ct.UpdateResponsible)
 	api.DELETE("/responsible", middleware.ResponsibleMiddleware(), ct.DeleteResponsible)
 	api.POST("/login/responsible", ct.AuthResponsible)
+	api.POST("/responsible/card", ct.RegisterCreditCard)
+
 }
 
 func (ct *ResponsibleController) Ping(c *gin.Context) {
@@ -48,10 +50,19 @@ func (ct *ResponsibleController) CreateResponsible(c *gin.Context) {
 		return
 	}
 
-	err := ct.responsibleservice.CreateResponsible(c, &input)
+	cust, err := ct.responsibleservice.CreateCustomer(c, &input)
+	if err != nil {
+		log.Printf("error to create customer at stripe: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when creating customer at stripe"))
+		return
+	}
+
+	input.CustomerId = cust.ID
+
+	err = ct.responsibleservice.CreateResponsible(c, &input)
 	if err != nil {
 		log.Printf("error to create responsible: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured qwhen creating responsible"))
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when creating responsible"))
 		return
 	}
 
@@ -99,9 +110,25 @@ func (ct *ResponsibleController) UpdateResponsible(c *gin.Context) {
 
 	input.CPF = *cpf
 
-	err = ct.responsibleservice.UpdateResponsible(c, &input)
+	currentResponsible, err := ct.responsibleservice.GetResponsible(c, &input.CPF)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at update"))
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "internal server error at get current user"))
+		return
+	}
+
+	_, err = ct.responsibleservice.UpdateCustomer(c, currentResponsible)
+	if err != nil {
+		log.Printf("customer update stripe error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "customer update stripe error"))
+		return
+	}
+
+	err = ct.responsibleservice.UpdateResponsible(c, currentResponsible, &input)
+	if err != nil {
+		log.Printf("responsible update error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "responsible update error"))
 		return
 	}
 
@@ -120,6 +147,20 @@ func (ct *ResponsibleController) DeleteResponsible(c *gin.Context) {
 	cpf, err := utils.InterfaceToString(cpfInteface)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "the value isn't string"})
+		return
+	}
+
+	responsible, err := ct.responsibleservice.GetResponsible(c, cpf)
+	if err != nil {
+		log.Printf("get customerid error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "get customerid error"))
+		return
+	}
+
+	_, err = ct.responsibleservice.DeleteCustomer(c, responsible.CustomerId)
+	if err != nil {
+		log.Printf("delete customerid error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InternalServerResponseError(err, "delete customerid error"))
 		return
 	}
 
@@ -171,4 +212,33 @@ func (ct *ResponsibleController) AuthResponsible(c *gin.Context) {
 		"responsible": responsible,
 		"token":       jwt,
 	})
+}
+
+func (ct *ResponsibleController) RegisterCreditCard(c *gin.Context) {
+	// receiving cardtokem and cpf only
+	var input models.Responsible
+
+	if err := c.BindJSON(&input); err != nil {
+		log.Printf("error to parsed body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, exceptions.InvalidBodyContentResponseError(err))
+		return
+	}
+
+	paymentMethod, err := ct.responsibleservice.CreatePaymentMethod(c, &input.CardToken)
+	if err != nil {
+		log.Printf("error to create payment method: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when register payment method in stripe"))
+		return
+	}
+
+	err = ct.responsibleservice.RegisterCreditCard(c, &input.CPF, &input.CardToken, &paymentMethod.ID)
+
+	if err != nil {
+		log.Printf("error to register card: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, exceptions.InternalServerResponseError(err, "an error occured when register credit card"))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"messsage": "card attached in customer"})
+
 }

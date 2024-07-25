@@ -14,4 +14,5 @@ type Responsible struct {
 	CardToken     string `json:"card_token"`
 	PaymentMethod string `json:"payment_method"`
 	CustomerId    string `json:"customer_id"`
+	Phone         string `json:"phone"`
 }
