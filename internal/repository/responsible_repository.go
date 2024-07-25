@@ -12,7 +12,7 @@ import (
 type IResponsibleRepository interface {
 	CreateResponsible(ctx context.Context, responsible *models.Responsible) error
 	GetResponsible(ctx context.Context, cpf *string) (*models.Responsible, error)
-	UpdateResponsible(ctx context.Context, responsible *models.Responsible) error
+	UpdateResponsible(ctx context.Context, currentResponsible, responsible *models.Responsible) error
 	DeleteResponsible(ctx context.Context, cpf *string) error
 	AuthResponsible(ctx context.Context, responsible *models.Responsible) (*models.Responsible, error)
 }
@@ -28,13 +28,13 @@ func NewResponsibleRepository(conn *sql.DB) *ResponsibleRepository {
 }
 
 func (rer *ResponsibleRepository) CreateResponsible(ctx context.Context, responsible *models.Responsible) error {
-	sqlQuery := `INSERT INTO responsible (name, email, password, cpf, street, number, zip, complement, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-	_, err := rer.db.Exec(sqlQuery, responsible.Name, responsible.Email, responsible.Password, responsible.CPF, responsible.Street, responsible.Number, responsible.ZIP, responsible.Complement, responsible.Status)
+	sqlQuery := `INSERT INTO responsible (name, email, password, cpf, street, number, zip, complement, status, customer_id, phone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	_, err := rer.db.Exec(sqlQuery, responsible.Name, responsible.Email, responsible.Password, responsible.CPF, responsible.Street, responsible.Number, responsible.ZIP, responsible.Complement, responsible.Status, responsible.CustomerId, responsible.Phone)
 	return err
 }
 
 func (rer *ResponsibleRepository) GetResponsible(ctx context.Context, cpf *string) (*models.Responsible, error) {
-	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement FROM responsible WHERE cpf = $1 LIMIT 1`
+	sqlQuery := `SELECT id, name, cpf, email, street, number, zip, status, complement, card_token, payment_method_id, customer_id, phone FROM responsible WHERE cpf = $1 LIMIT 1`
 	var responsible models.Responsible
 	err := rer.db.QueryRow(sqlQuery, *cpf).Scan(
 		&responsible.ID,
@@ -46,6 +46,10 @@ func (rer *ResponsibleRepository) GetResponsible(ctx context.Context, cpf *strin
 		&responsible.ZIP,
 		&responsible.Status,
 		&responsible.Complement,
+		&responsible.CardToken,
+		&responsible.PaymentMethod,
+		&responsible.CustomerId,
+		&responsible.Phone,
 	)
 	if err != nil || err == sql.ErrNoRows {
 		return nil, err
@@ -53,22 +57,7 @@ func (rer *ResponsibleRepository) GetResponsible(ctx context.Context, cpf *strin
 	return &responsible, nil
 }
 
-func (rer *ResponsibleRepository) UpdateResponsible(ctx context.Context, responsible *models.Responsible) error {
-	sqlQuery := `SELECT name, email, password, street, number, zip, status, complement FROM responsible WHERE cpf = $1 LIMIT 1`
-	var currentResponsible models.Responsible
-	err := rer.db.QueryRow(sqlQuery, responsible.CPF).Scan(
-		&currentResponsible.Name,
-		&currentResponsible.Email,
-		&currentResponsible.Password,
-		&currentResponsible.Street,
-		&currentResponsible.Number,
-		&currentResponsible.ZIP,
-		&currentResponsible.Status,
-		&currentResponsible.Complement,
-	)
-	if err != nil || err == sql.ErrNoRows {
-		return err
-	}
+func (rer *ResponsibleRepository) UpdateResponsible(ctx context.Context, currentResponsible, responsible *models.Responsible) error {
 
 	if responsible.Name != "" && responsible.Name != currentResponsible.Name {
 		currentResponsible.Name = responsible.Name
@@ -95,7 +84,7 @@ func (rer *ResponsibleRepository) UpdateResponsible(ctx context.Context, respons
 	}
 
 	sqlQueryUpdate := `UPDATE responsible SET name = $1, email = $2, password = $3, street = $4, number = $5, zip = $6, complement = $7 WHERE cpf = $8`
-	_, err = rer.db.ExecContext(ctx, sqlQueryUpdate, currentResponsible.Name, currentResponsible.Email, currentResponsible.Password, currentResponsible.Street, currentResponsible.Number, currentResponsible.ZIP, currentResponsible.Complement, responsible.CPF)
+	_, err := rer.db.ExecContext(ctx, sqlQueryUpdate, currentResponsible.Name, currentResponsible.Email, currentResponsible.Password, currentResponsible.Street, currentResponsible.Number, currentResponsible.ZIP, currentResponsible.Complement, responsible.CPF)
 	return err
 }
 
