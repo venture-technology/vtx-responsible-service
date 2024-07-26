@@ -43,7 +43,7 @@ func (cr *ChildRepository) GetChild(ctx context.Context, rg *string) (*models.Ch
 
 func (cr *ChildRepository) FindAllChildren(ctx context.Context, cpf *string) ([]models.Child, error) {
 	sqlQuery := `SELECT id, name, rg, responsible_id, shift FROM children WHERE responsible_id = $1`
-	rows, err := cr.db.Query(sqlQuery)
+	rows, err := cr.db.Query(sqlQuery, cpf)
 	if err != nil {
 		return nil, err
 	}
