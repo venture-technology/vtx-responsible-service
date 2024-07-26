@@ -78,7 +78,7 @@ func (ct *ChildController) FindAllChildren(c *gin.Context) {
 
 	cpf := c.Param("cpf")
 
-	children, err := ct.childservice.FindAllChilds(c, &cpf)
+	children, err := ct.childservice.FindAllChildren(c, &cpf)
 
 	if err != nil {
 		log.Printf("error while found children: %s", err.Error())
