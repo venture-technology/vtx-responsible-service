@@ -25,7 +25,7 @@ func (cs *ChildService) GetChild(ctx context.Context, rg *string) (*models.Child
 	return cs.childrepository.GetChild(ctx, rg)
 }
 
-func (cs *ChildService) FindAllChilds(ctx context.Context, cpf *string) ([]models.Child, error) {
+func (cs *ChildService) FindAllChildren(ctx context.Context, cpf *string) ([]models.Child, error) {
 	return cs.childrepository.FindAllChildren(ctx, cpf)
 }
 
