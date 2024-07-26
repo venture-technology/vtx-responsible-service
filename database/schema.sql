@@ -1,4 +1,3 @@
-DROP TABLE responsible;
 -- Table Responsible
 CREATE TABLE IF NOT EXISTS responsible (
     id SERIAL,
@@ -22,6 +21,7 @@ CREATE TABLE IF NOT EXISTS children (
     id SERIAL,
     name VARCHAR(100) NOT NULL,
     rg VARCHAR(9) PRIMARY KEY NOT NULL,
-    responsible_id VARCHAR(14) NOT NULL,
+    responsible_id VARCHAR(11) NOT NULL,
+    shift TEXT NOT NULL,
     FOREIGN KEY (responsible_id) REFERENCES responsible(cpf) ON DELETE CASCADE
 );
